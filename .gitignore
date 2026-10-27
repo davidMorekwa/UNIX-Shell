@@ -1,0 +1,70 @@
+# ==========================================
+# Artifacts of compilation / Object files
+# ==========================================
+*.o
+*.ko
+*.obj
+*.elf
+
+# Prerequisites / Dependency tracking
+*.d
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# ==========================================
+# Linker output / Libraries
+# ==========================================
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects / Dynamic libraries
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# ==========================================
+# Executables & Binaries
+# ==========================================
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Common custom build/output directories
+# (Uncomment if your build tools output here)
+# [Bb]in/
+# [Oo]bj/
+build/
+
+# ==========================================
+# Debug files
+# ==========================================
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.dwo
+
+# ==========================================
+# Operating System & IDE Caches
+# ==========================================
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# VS Code
+.vscode/
+
+# Vim / Emacs swap files
+*~
+*.swp
