@@ -30,12 +30,12 @@ int command_add_arg(struct command *cmd, const char *arg)
      * arg into cmd->argv[cmd->argc] and bump argc. A failed call must leave
      * *cmd unchanged. */
     if(arg != NULL && cmd != NULL && (*cmd).argc < MAX_ARGS){
-        int arg_len = strlen(arg);
-        // printf("ARG_LEN: %d", arg_len);
-        if(arg_len <= MAX_ARG_LEN){
-            strcpy((*cmd).argv[(*cmd).argc], arg);
+        int arg_length = strlen(arg);
+        if(arg_length <= MAX_ARG_LEN){
+            strncpy((*cmd).argv[(*cmd).argc], arg, arg_length+1);
             (*cmd).argc += 1;
             return 0;
+
         }
     }
     return -1;
@@ -89,14 +89,75 @@ int command_format(const struct command *cmd, char *buf, size_t size)
      * and return the FULL length. Hint: write a small helper that appends one
      * piece of text to buf at an offset, always advancing the offset by the
      * piece's full length but only copying what still fits. */
-    (void)cmd;
-    (void)buf;
-    (void)size;
-    return 0;
+    if (cmd == NULL) return 0;
+
+    int total_len = 0;
+
+    // Handle null termination if size > 0
+    if (buf != NULL && size > 0) {
+        buf[0] = '\0';
+    }
+
+    char *curr_buf = buf;
+    size_t rem_size = (buf != NULL && size > 0) ? size : 0;
+
+    // 1. Format commands
+    for (int i = 0; i < (*cmd).argc; i++) {
+        const char *command_format = (i == 0) ? "%s" : " %s";
+        int written = snprintf(curr_buf, rem_size, command_format,(*cmd).argv[i]);
+        if (written > 0) {
+            total_len += written;
+            if ((size_t)written < rem_size) {
+                curr_buf += written;
+                rem_size -= written;
+            } else {
+                rem_size = 0;
+            }
+        }
+    }
+
+    // 2. Format infile
+    if (cmd->infile[0] != '\0') {
+        int written = snprintf(curr_buf, rem_size, " < %s", cmd->infile);
+        if (written > 0) {
+            total_len += written;
+            if ((size_t)written < rem_size) {
+                curr_buf += written;
+                rem_size -= written;
+            } else {
+                rem_size = 0;
+            }
+        }
+    }
+
+    // 3. Format outfile
+    if (cmd->outfile[0] != '\0') {
+        const char *fmt = (cmd->append == 0) ? " > %s" : " >> %s";
+        int written = snprintf(curr_buf, rem_size, fmt, cmd->outfile);
+        if (written > 0) {
+            total_len += written;
+            if ((size_t)written < rem_size) {
+                curr_buf += written;
+                rem_size -= written;
+            } else {
+                rem_size = 0;
+            }
+        }
+    }
+
+    return total_len;
 }
 
 void pipeline_init(struct pipeline *pl)
 {
     /* TODO: ncmds = 0, background = 0, and command_init every cmds[i]. */
-    (void)pl;
+    for(int i = 0; i < MAX_CMDS; i++){
+        (*pl).cmds[i].argc = 0;
+        // (*pl).cmds[i].argv[0] = '\0';
+        (*pl).cmds[i].infile[0] = '\0';
+        (*pl).cmds[i].outfile[0] = '\0';
+        (*pl).cmds[i].append = 0;
+    }
+    (*pl).ncmds = 0;
+    (*pl).background = 0;
 }
