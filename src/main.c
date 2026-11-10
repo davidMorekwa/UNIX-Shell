@@ -24,7 +24,40 @@
 
 int main(void)
 {
-    /* TODO: declare a struct shell_state, a line buffer (1024 bytes is fine)
-     * and a prompt buffer, then write the loop described above. */
+    struct shell_state st;
+    char line[1024];
+    char prompt[64];
+
+    shell_state_init(&st);
+
+    while (st.running) {
+        shell_state_format_prompt(&st, prompt, sizeof(prompt));
+        printf("%s", prompt);
+        fflush(stdout);
+
+        int result = read_line(stdin, line, sizeof(line));
+        if (result == READ_EOF) {
+            putchar('\n');
+            break;
+        }
+        if (result == READ_TOO_LONG) {
+            fprintf(stderr, "mysh: line too long\n");
+            shell_state_set_status(&st, 1);
+            continue;
+        }
+
+        char *command = str_trim(line);
+        if (command[0] == '\0') {
+            continue;
+        }
+        if (builtin_lookup(command) == BUILTIN_EXIT) {
+            st.running = 0;
+            continue;
+        }
+
+        printf("You said: %s\n", command);
+        shell_state_set_status(&st, 0);
+    }
+
     return 0;
 }

@@ -42,6 +42,7 @@
 # [Bb]in/
 # [Oo]bj/
 build/
+build-san/
 
 # ==========================================
 # Debug files

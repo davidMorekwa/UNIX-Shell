@@ -20,23 +20,21 @@ int read_line(FILE *in, char *buf, size_t size)
     // (void)size;
 
     if(in != NULL && buf != NULL){
-        printf("Null checks passed \n");
+        // printf("Null checks passed \n");
         if(fgets(buf, size, in) != NULL){
-            printf("Input read %s \n", buf);
+            // printf("Input read %s \n", buf);
 
             // TODO: Handle buffer limit reached
             if(strlen(buf) >= size-1){
                 // TODO: 1. input fits
                 int next_char;
                 next_char = fgetc(in);
-                printf("Next char: %c \n", next_char);
+                // printf("Next char: %c \n", next_char);
                 if(next_char != '\n'){
                     // TODO: 2. Input doesn't fit
-                    printf("Buffer overflow \n");
+                    // printf("Buffer overflow \n");
                     while((next_char = fgetc(in)) != EOF && next_char !='\n');
                     return READ_TOO_LONG;
-                } else {
-                    printf("Buffer filled to capacity \n");
                 }
             }
             // if(strlen(buf) == size-1 && strchr(buf, '\n') == NULL){
@@ -53,7 +51,7 @@ int read_line(FILE *in, char *buf, size_t size)
             //     }
             // }
             buf[strcspn(buf, "\n")] = '\0';
-            printf("Buf: %s \n", buf);
+            // printf("Buf: %s \n", buf);
             return strlen(buf);
         }
     }
@@ -76,7 +74,7 @@ char *str_trim(char *s)
     char *first_non_whitespace = NULL;
     for(int i = 0; i < (int)strlen(s); i++){
         if(!isspace(s[i])){
-            printf("Char:%02X\n", s[i]);
+            // printf("Char:%02X\n", s[i]);
             first_non_whitespace = &s[i];
             break;
         }
