@@ -80,8 +80,8 @@ test1: $(BUILD)/test_m1 $(BUILD)/mysh_m1
 	./$(BUILD)/test_m1
 	sh tests/integration_m1.sh ./$(BUILD)/mysh_m1
 
-myTests: $(BUILD)/test_m1
-	TEST=$(TEST) ./$(BUILD)/test_m1
+myTests: $(BUILD)/test_m2
+	TEST=$(TEST) ./$(BUILD)/test_m2
 
 test2: $(BUILD)/test_m2
 	./$(BUILD)/test_m2
