@@ -27,49 +27,101 @@
 
 int tokenize(const char *line, struct strvec *out)
 {
-    size_t string_len = my_strlen(line);
-    int count = 0;
-    char *buffer = malloc(string_len+1);
-    if(buffer == NULL){
-        printf("Failed malloc operation:\n");
+    if (!line || !out) {
+        return -1;
+    }
+
+    strvec_init(out);
+
+    size_t len = my_strlen(line);
+    char *buf = malloc(len + 1);
+    if (!buf) {
         return LEX_ERR_NOMEM;
     }
-    char *original_buffer = buffer;
-    char *token_start = NULL;
-    while(*line){
-        if(isspace(*line)){
-            if(token_start != NULL){
-                // printf("Sentence spacing\n");
-                count++;
-                *buffer = '\0';
-                int result = strvec_push(out, original_buffer);
-                if(result != 0){
-                    (*out).len = 0;
+    size_t buf_len = 0;
+
+    bool in_single = false;
+    bool in_double = false;
+    bool token_started = false;
+
+    const char *p = line;
+    while (*p) {
+        if (*p == '\'' && !in_double) {
+            in_single = !in_single;
+            token_started = true;
+            p++;
+        } else if (*p == '"' && !in_single) {
+            in_double = !in_double;
+            token_started = true;
+            p++;
+        } else if (!in_single && !in_double && isspace((unsigned char)*p)) {
+            if (token_started) {
+                buf[buf_len] = '\0';
+                if (strvec_push(out, buf) != 0) {
+                    free(buf);
+                    strvec_free(out);
+                    out->len = 0;
+                    return LEX_ERR_NOMEM;
                 }
-                buffer = original_buffer;
-                token_start = NULL;
+                buf_len = 0;
+                token_started = false;
+            }
+            p++;
+        } else if (!in_single && !in_double && (*p == '|' || *p == '<' || *p == '>' || *p == '&')) {
+            if (token_started) {
+                buf[buf_len] = '\0';
+                if (strvec_push(out, buf) != 0) {
+                    free(buf);
+                    strvec_free(out);
+                    out->len = 0;
+                    return LEX_ERR_NOMEM;
+                }
+                buf_len = 0;
+                token_started = false;
+            }
+
+            char op_str[3];
+            if (*p == '>' && *(p + 1) == '>') {
+                op_str[0] = '>';
+                op_str[1] = '>';
+                op_str[2] = '\0';
+                p += 2;
+            } else {
+                op_str[0] = *p;
+                op_str[1] = '\0';
+                p += 1;
+            }
+
+            if (strvec_push(out, op_str) != 0) {
+                free(buf);
+                strvec_free(out);
+                out->len = 0;
+                return LEX_ERR_NOMEM;
             }
         } else {
-            if(token_start == NULL){
-                token_start = (char *)line;
-                // printf("Token start: %p\n", token_start);
-            }
-            // printf("Char %c\n", *line);
-            *buffer = *line;
-            buffer++;
-        }
-        line++;
-    }
-    if(token_start != NULL){
-        count++;
-        *buffer = '\0';
-        int result = strvec_push(out, original_buffer);
-        if(result != 0){
-            (*out).len = 0;
+            buf[buf_len++] = *p;
+            token_started = true;
+            p++;
         }
     }
-    buffer = original_buffer;
-    memset(buffer, '\0', string_len+1);
-    free(buffer);
-    return count;
+
+    if (in_single || in_double) {
+        free(buf);
+        strvec_free(out);
+        out->len = 0;
+        return LEX_ERR_QUOTE;
+    }
+
+    if (token_started) {
+        buf[buf_len] = '\0';
+        if (strvec_push(out, buf) != 0) {
+            free(buf);
+            strvec_free(out);
+            out->len = 0;
+            return LEX_ERR_NOMEM;
+        }
+    }
+
+    free(buf);
+    return (int)out->len;
 }
