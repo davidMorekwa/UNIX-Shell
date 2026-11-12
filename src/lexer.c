@@ -18,15 +18,58 @@
  * right error code.
  */
 #include "lexer.h"
-
+#include <ctype.h>
 #include <stdlib.h>
-
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 #include "mystring.h"
 
 int tokenize(const char *line, struct strvec *out)
 {
-    /* TODO */
-    (void)line;
-    (void)out;
-    return LEX_ERR_NOMEM;
+    size_t string_len = my_strlen(line);
+    int count = 0;
+    char *buffer = malloc(string_len+1);
+    if(buffer == NULL){
+        printf("Failed malloc operation:\n");
+        return LEX_ERR_NOMEM;
+    }
+    char *original_buffer = buffer;
+    char *token_start = NULL;
+    while(*line){
+        if(isspace(*line)){
+            if(token_start != NULL){
+                // printf("Sentence spacing\n");
+                count++;
+                *buffer = '\0';
+                int result = strvec_push(out, original_buffer);
+                if(result != 0){
+                    (*out).len = 0;
+                }
+                buffer = original_buffer;
+                token_start = NULL;
+            }
+        } else {
+            if(token_start == NULL){
+                token_start = (char *)line;
+                // printf("Token start: %p\n", token_start);
+            }
+            // printf("Char %c\n", *line);
+            *buffer = *line;
+            buffer++;
+        }
+        line++;
+    }
+    if(token_start != NULL){
+        count++;
+        *buffer = '\0';
+        int result = strvec_push(out, original_buffer);
+        if(result != 0){
+            (*out).len = 0;
+        }
+    }
+    buffer = original_buffer;
+    memset(buffer, '\0', string_len+1);
+    free(buffer);
+    return count;
 }
