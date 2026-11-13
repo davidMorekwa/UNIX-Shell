@@ -31,6 +31,7 @@ int command_add_arg(struct command *cmd, const char *arg)
      * *cmd unchanged. */
     if(arg != NULL && cmd != NULL && (*cmd).argc < MAX_ARGS){
         int arg_length = strlen(arg);
+        // printf("Arg len: %d\n", arg_length);
         if(arg_length <= MAX_ARG_LEN){
             strncpy((*cmd).argv[(*cmd).argc], arg, arg_length+1);
             (*cmd).argc += 1;
