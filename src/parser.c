@@ -43,8 +43,32 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
         char *item = (char *)(*tokens).items[i];
         printf("Item: %s\n", item);
 
+        if(expecting_filename != 0){
+            if(my_strcmp(item, "<") == 0 || my_strcmp(item, ">") == 0 ||
+               my_strcmp(item, ">>") == 0 || my_strcmp(item, "|") == 0 ||
+               my_strcmp(item, "&") == 0){
+                return PARSE_ERR_SYNTAX;
+            }
+
+            if(my_strlen(item) > MAX_PATH_LEN){
+                return PARSE_ERR_TOO_LONG;
+            }
+
+            int res = (expecting_filename == 1)
+                ? command_set_infile(&current_command, item)
+                : command_set_outfile(&current_command, item, append);
+
+            if(res != 0){
+                printf("Command error\n");
+                return PARSE_ERR_SYNTAX;
+            }
+            expecting_filename = 0;
+            continue;
+        }
+
         if(my_strcmp(item, "<") == 0){
-            if(current_command.argc == 0 || i == (int)(*tokens).len - 1 || has_infile){
+            // Input redirection is ONLY allowed on the first command
+            if((*out).ncmds > 0 || i == (int)(*tokens).len - 1 || has_infile){
                 printf("[-] Duplicate or misplaced '<'\n");
                 return PARSE_ERR_SYNTAX;
             }
@@ -52,7 +76,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
             expecting_filename = 1;
             continue;
         } else if(my_strcmp(item, ">") == 0){
-            if(current_command.argc == 0 || i == (int)(*tokens).len - 1 || has_outfile){
+            if(i == (int)(*tokens).len - 1 || has_outfile){
                 printf("[-] Duplicate or misplaced '>'\n");
                 return PARSE_ERR_SYNTAX;
             }
@@ -74,6 +98,10 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
                 printf("[-] Misplaced '|'\n");
                 return PARSE_ERR_SYNTAX;
             }
+            // Output redirection is NOT allowed before a pipe (must be on the last command)
+            if(has_outfile){
+                return PARSE_ERR_SYNTAX;
+            }
             if((*out).ncmds >= MAX_CMDS){
                 return PARSE_ERR_TOO_MANY_CMDS;
             }
@@ -92,44 +120,20 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
                 (*out).background = 1;
                 continue;
             }
-            // else {
-            //     printf("& error\n");
-            //     return PARSE_ERR_SYNTAX;
-            // }
         }
 
-        if(expecting_filename == 1){
-            if(my_strlen(item) > MAX_PATH_LEN){
-                return PARSE_ERR_TOO_LONG;
-            }
-            if(command_set_infile(&current_command, item) != 0){
-                printf("Command error\n");
-                return PARSE_ERR_SYNTAX;
-            }
-            expecting_filename = 0;
-        } else if(expecting_filename == 2){
-            if(my_strlen(item) > MAX_PATH_LEN){
-                return PARSE_ERR_TOO_LONG;
-            }
-            if(command_set_outfile(&current_command, item, append) != 0){
-                printf("Command error\n");
-                return PARSE_ERR_SYNTAX;
-            }
-            expecting_filename = 0;
-        } else {
-            if(current_command.argc >= MAX_ARGS){
-                return PARSE_ERR_TOO_MANY_ARGS;
-            }
-            if(my_strlen(item) > MAX_ARG_LEN){
-                return PARSE_ERR_TOO_LONG;
-            }
-            if(command_add_arg(&current_command, item) != 0){
-                printf("[-]Command add args failed\n");
-            }
-            printf("Command struct:\n\targc -> %d\n\targv -> %s\n",
-                   current_command.argc,
-                   current_command.argv[current_command.argc - 1]);
+        if(current_command.argc >= MAX_ARGS){
+            return PARSE_ERR_TOO_MANY_ARGS;
         }
+        if(my_strlen(item) > MAX_ARG_LEN){
+            return PARSE_ERR_TOO_LONG;
+        }
+        if(command_add_arg(&current_command, item) != 0){
+            printf("[-]Command add args failed\n");
+        }
+        printf("Command struct:\n\targc -> %d\n\targv -> %s\n",
+               current_command.argc,
+               current_command.argv[current_command.argc - 1]);
     }
 
     if(expecting_filename != 0 || current_command.argc == 0){
