@@ -41,7 +41,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
 
     for(int i = 0; i < (int)(*tokens).len; i++){
         char *item = (char *)(*tokens).items[i];
-        printf("Item: %s\n", item);
+        // printf("Item: %s\n", item);
 
         if(expecting_filename != 0){
             if(my_strcmp(item, "<") == 0 || my_strcmp(item, ">") == 0 ||
@@ -59,7 +59,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
                 : command_set_outfile(&current_command, item, append);
 
             if(res != 0){
-                printf("Command error\n");
+                // printf("Command error\n");
                 return PARSE_ERR_SYNTAX;
             }
             expecting_filename = 0;
@@ -69,7 +69,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
         if(my_strcmp(item, "<") == 0){
             // Input redirection is ONLY allowed on the first command
             if((*out).ncmds > 0 || i == (int)(*tokens).len - 1 || has_infile){
-                printf("[-] Duplicate or misplaced '<'\n");
+                // printf("[-] Duplicate or misplaced '<'\n");
                 return PARSE_ERR_SYNTAX;
             }
             has_infile = 1;
@@ -77,7 +77,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
             continue;
         } else if(my_strcmp(item, ">") == 0){
             if(i == (int)(*tokens).len - 1 || has_outfile){
-                printf("[-] Duplicate or misplaced '>'\n");
+                // printf("[-] Duplicate or misplaced '>'\n");
                 return PARSE_ERR_SYNTAX;
             }
             has_outfile = 1;
@@ -86,7 +86,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
             continue;
         } else if(my_strcmp(item, ">>") == 0){
             if(current_command.argc == 0 || i == (int)(*tokens).len - 1 || has_outfile){
-                printf("[-] Duplicate or misplaced '>>'\n");
+                // printf("[-] Duplicate or misplaced '>>'\n");
                 return PARSE_ERR_SYNTAX;
             }
             has_outfile = 1;
@@ -95,7 +95,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
             continue;
         } else if(my_strcmp(item, "|") == 0){
             if(current_command.argc == 0 || i == (int)(*tokens).len - 1){
-                printf("[-] Misplaced '|'\n");
+                // printf("[-] Misplaced '|'\n");
                 return PARSE_ERR_SYNTAX;
             }
             // Output redirection is NOT allowed before a pipe (must be on the last command)
@@ -113,7 +113,7 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
             continue;
         } else if(my_strcmp(item, "&") == 0){
             if(current_command.argc == 0 || i < (int)(*tokens).len - 1){
-                printf("[-] Misplaced '&'\n");
+                // printf("[-] Misplaced '&'\n");
                 return PARSE_ERR_SYNTAX;
             }
             if(!has_infile || !has_outfile) {
@@ -131,9 +131,9 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
         if(command_add_arg(&current_command, item) != 0){
             printf("[-]Command add args failed\n");
         }
-        printf("Command struct:\n\targc -> %d\n\targv -> %s\n",
-               current_command.argc,
-               current_command.argv[current_command.argc - 1]);
+        // printf("Command struct:\n\targc -> %d\n\targv -> %s\n",
+        //        current_command.argc,
+        //        current_command.argv[current_command.argc - 1]);
     }
 
     if(expecting_filename != 0 || current_command.argc == 0){
@@ -148,18 +148,16 @@ int parse_pipeline(const struct strvec *tokens, struct pipeline *out)
 
 
 void add_to_pipeline(struct command curr_command, struct pipeline *out){
-    printf("[+] Adding to pipeline \n");
+    // printf("[+] Adding to pipeline \n");
     if(out != NULL){
         (*out).cmds[(*out).ncmds] = curr_command;
         (*out).ncmds++;
     }
-    printf("[+][+]Pipeline:\n\tncmds: %d\n", (*out).ncmds);
+    // printf("[+][+]Pipeline:\n\tncmds: %d\n", (*out).ncmds);
 }
 struct command reset_command_struct(struct command *cmd){
     if(cmd != NULL){
         printf("[+]command struct reset:\n\targc -> %d\n", (*cmd).argc);
-    } else {
-        printf("[+] Initializing command struct");
     }
     command_init(cmd);
     return *cmd;

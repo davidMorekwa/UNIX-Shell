@@ -45,6 +45,7 @@ int strvec_push(struct strvec *v, const char *s)
         int multiple = (*v).cap == 0 ? 4 : (2*(*v).cap);
         char **new_memory = realloc((*v).items, (multiple * sizeof(char *)));
         if(new_memory == NULL){
+            free(new_s);
             return -1;
         }
         (*v).items = new_memory;
