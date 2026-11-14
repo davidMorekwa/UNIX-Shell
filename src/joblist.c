@@ -134,7 +134,6 @@ int joblist_format(const struct joblist *jl, char *buf, size_t size)
             dest_size = size - total_len;
         }
         int n = snprintf(dest, dest_size, "[%d] %d %s\n", (*curr_job).id, (*curr_job).pid, (*curr_job).cmdline);
-        printf("N: %d", n);
         total_len += n;
         curr_job = (*curr_job).next;
     }
